@@ -225,3 +225,6 @@ configs/config.yaml.local
 
 # Windows thumbnail cache
 Thumbs.db
+
+
+.VSCodeCounter
