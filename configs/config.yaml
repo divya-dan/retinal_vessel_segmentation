@@ -1,0 +1,42 @@
+data:
+  data_root: data
+  train_val_split: 0.1
+  random_seed: 42
+model:
+  unet:
+    in_channels: 3
+    out_channels: 1
+    channels:
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+    strides:
+    - 2
+    - 2
+    - 2
+    - 2
+    num_res_units: 2
+    norm: BATCH
+train:
+  multi_gpu: false
+  device: cuda
+  seed: 42
+  learning_rate: 0.0001
+  batch_size: 8
+  num_epochs: 50
+  val_interval: 1
+optimizer:
+  type: Adam
+  weight_decay: 1.0e-05
+scheduler:
+  step_size: 10
+  gamma: 0.5
+early_stopping:
+  metric: val_dice
+  patience: 10
+paths:
+  checkpoint_dir: models
+  log_dir: outputs/logs
+  output_dir: outputs

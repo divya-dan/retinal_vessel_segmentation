@@ -172,3 +172,56 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# virtual environment directories
+.venv/
+
+# VS code settings and workspace files
+.vscode/
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Project-specific ignores
+# ────────────────────────────────────────────────────────────────────────────────
+
+# Raw & processed data (downloaded via maples_dr and MESSIDOR scripts)
+data/
+# if you want to keep empty folders in Git, add a .gitkeep inside and un-comment:
+#!data/.gitkeep
+
+# Model checkpoints and weights
+models/
+#!models/.gitkeep
+
+# Training/evaluation outputs (predictions, metrics, figures, tensorboard logs)
+outputs/
+#!outputs/.gitkeep
+
+# TensorBoard event files (if you only want to ignore tensorboard logs, instead of whole outputs/)
+outputs/logs/
+*.tfevents.*
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Optional config overrides
+# ────────────────────────────────────────────────────────────────────────────────
+
+# If you ever want to keep your own local tweaks separate from the tracked config.yaml:
+configs/config.yaml.local
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Notebook checkpoints
+# ────────────────────────────────────────────────────────────────────────────────
+
+.ipynb_checkpoints/
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Miscellaneous
+# ────────────────────────────────────────────────────────────────────────────────
+
+# Log files
+*.log
+
+# macOS metadata
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
