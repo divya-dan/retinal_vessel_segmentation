@@ -9,7 +9,7 @@ project_root = os.path.dirname(current_file)
 project_root = os.path.dirname(project_root)
 sys.path.insert(0, project_root)
 
-from monai.data import CacheDataset, DataLoader
+from monai.data import CacheDataset, SmartCacheDataset, DataLoader
 from src.config import load_config
 from src.data.preprocess import split_train_val, get_transforms, get_image_mask_pairs
 
@@ -29,6 +29,7 @@ def get_dataloaders():
     batch_size = cfg['train']['batch_size']
     num_workers = cfg.get('data', {}).get('n_workers', os.cpu_count())
     image_size = cfg['data'].get('image_size', (512, 512))
+    use_patches = cfg.get('patch', {}).get('use', False)
 
     # Get train/val splits
     train_pairs, val_pairs = split_train_val(train_folder, split_ratio, seed)
@@ -36,12 +37,18 @@ def get_dataloaders():
     test_pairs = get_image_mask_pairs(test_folder)
 
     # Create transforms
-    train_transforms, val_transforms, test_transforms = get_transforms(image_size)
+    train_transforms, val_transforms, test_transforms = get_transforms(image_size=image_size, use_patches=use_patches)
 
-    # Build datasets using CacheDataset for faster performance
-    train_ds = CacheDataset(data=train_pairs, transform=train_transforms, cache_rate=1.0)
-    val_ds   = CacheDataset(data=val_pairs,   transform=val_transforms,   cache_rate=1.0)
-    test_ds  = CacheDataset(data=test_pairs,  transform=test_transforms,  cache_rate=1.0)
+    # Build datasets
+    DatasetClass = SmartCacheDataset if use_patches else CacheDataset
+
+    # SmartCacheDataset doesn't accept num_workers parameter
+    if use_patches:
+        train_ds = DatasetClass(data=train_pairs, transform=train_transforms, cache_rate=1.0)
+    else:
+        train_ds = DatasetClass(data=train_pairs, transform=train_transforms, cache_rate=1.0, num_workers=num_workers)
+    val_ds   = CacheDataset(data=val_pairs,   transform=val_transforms,   cache_rate=1.0, num_workers=num_workers)
+    test_ds  = CacheDataset(data=test_pairs,  transform=test_transforms,  cache_rate=1.0, num_workers=num_workers)
 
     # Create DataLoaders
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers)

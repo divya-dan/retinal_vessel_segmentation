@@ -2,6 +2,23 @@ data:
   data_root: data
   train_val_split: 0.1
   random_seed: 42
+  image_size:
+  - 1024
+  - 1024
+patch:
+  use: true
+  size:
+  - 256
+  - 256
+  pos: 1
+  neg: 1
+  num_samples: 4
+sliding_window:
+  roi_size:
+  - 256
+  - 256
+  sw_batch_size: 8
+  overlap: 0.5
 model:
   unet:
     in_channels: 3
@@ -27,6 +44,7 @@ train:
   batch_size: 8
   num_epochs: 50
   val_interval: 1
+  loss_function: dice_focal
 optimizer:
   type: Adam
   weight_decay: 1.0e-05
@@ -40,3 +58,4 @@ paths:
   checkpoint_dir: models
   log_dir: outputs/logs
   output_dir: outputs
+threshold: 0.6376556158065796

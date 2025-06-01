@@ -15,8 +15,41 @@ from src.config import load_config
 from src.dataset import get_dataloaders
 from src.model import get_unet_model
 from monai.metrics import DiceMetric
-from monai.networks.utils import one_hot
+from monai.inferers import sliding_window_inference
 
+from skimage.morphology import remove_small_objects, remove_small_holes, closing, square
+import numpy as np
+
+def clean_mask(pred_mask: np.ndarray, min_size: int = 500) -> np.ndarray:
+    """
+    - pred_mask:  any array that (after squeezing) becomes shape (H, W).
+      (Examples: (1, H, W), (H, W), (B, 1, H, W) with B=1—all of these squeeze to (H, W).)
+    - min_size:   the minimum connected‐component size to keep.
+
+    Returns a cleaned 2D uint8 mask of shape (H, W).
+    """
+    # If it's a PyTorch tensor, convert to numpy:
+    if not isinstance(pred_mask, np.ndarray):
+        try:
+            pred_mask = pred_mask.cpu().numpy()
+        except Exception:
+            raise ValueError("clean_mask() expects a numpy array or torch tensor convertible to numpy")
+
+    # Squeeze out any singleton dims until we have exactly 2 dims:
+    squeezed = np.squeeze(pred_mask)
+    if squeezed.ndim != 2:
+        raise ValueError(f"clean_mask() requires a mask that squeezes to 2D; got shape {pred_mask.shape} → squeezed to {squeezed.shape}")
+
+    mask2d = squeezed.astype(bool)  # make sure it's boolean for the morphology ops
+
+    # 1) Remove components smaller than min_size
+    cleaned = remove_small_objects(mask2d, min_size=min_size)
+    # 2) Fill holes smaller than min_size
+    cleaned = remove_small_holes(cleaned, area_threshold=min_size)
+    # 3) Apply a 3×3 closing to smooth out tiny notches
+    cleaned = closing(cleaned, square(3))
+
+    return cleaned.astype(np.uint8)
 
 def evaluate():
     cfg = load_config()
@@ -37,12 +70,42 @@ def evaluate():
     all_dice = []
     os.makedirs(os.path.join(cfg['paths']['output_dir'], 'eval_samples'), exist_ok=True)
 
+    # Ensure roi_size is a list of integers
+    roi_size_config = cfg.get("sliding_window", {}).get("roi_size", [512, 512])
+    roi_size = [int(x) if isinstance(x, str) else x for x in roi_size_config] if isinstance(roi_size_config, list) else [512, 512]
+    
+    # Convert other parameters to appropriate types
+    sw_batch_size = int(cfg.get("sliding_window", {}).get("sw_batch_size", 4))
+    overlap = float(cfg.get("sliding_window", {}).get("overlap", 0.25))
+
     with torch.no_grad():
         for i, batch in enumerate(tqdm(test_loader)):
             images = batch["image"].to(device)
             labels = batch["label"].to(device)
-            outputs = model(images)
-            preds = (outputs.sigmoid() > 0.5).float()
+
+            # ─── Run sliding‐window on raw logits, using Gaussian blending ───
+            outputs = sliding_window_inference(
+                inputs=images,
+                roi_size=roi_size,
+                sw_batch_size=sw_batch_size,
+                predictor=model,
+                overlap=overlap,
+                mode="gaussian"           
+            )
+            # ─── Only now convert the entire stitched logits to probabilities and threshold ───
+            threshold = float(cfg.get("threshold", 0.55))
+            probs = torch.sigmoid(outputs)    
+            preds = (probs > threshold).float()
+            
+            # Apply clean_mask to each prediction in the batch
+            # cleaned_preds = []
+            # for pred in preds:
+            #     pred_np = pred.cpu().squeeze().numpy()
+            #     cleaned_pred_np = clean_mask(pred_np)
+            #     cleaned_pred = torch.from_numpy(cleaned_pred_np).unsqueeze(0).unsqueeze(0).to(device).float()
+            #     cleaned_preds.append(cleaned_pred)
+            
+            # preds = torch.cat(cleaned_preds, dim=0)
 
             dice = dice_metric(preds, labels)
             all_dice.append(dice.cpu().numpy())  # Store the tensor as numpy array

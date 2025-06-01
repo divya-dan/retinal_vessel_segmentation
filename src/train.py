@@ -8,7 +8,8 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from monai.data import DataLoader
 from monai.utils import set_determinism
-from monai.losses import DiceCELoss
+from monai.losses import DiceCELoss, DiceFocalLoss
+
 from monai.handlers.utils import from_engine
 from monai.metrics import DiceMetric
 from monai.transforms import AsDiscrete
@@ -67,7 +68,12 @@ def train():
         model = nn.DataParallel(model)
 
     # Loss, optimizer, scheduler
-    criterion = DiceCELoss(sigmoid=True)
+    # Choose loss function based on config
+    if cfg.get('train', {}).get('loss_function', 'dice_ce') == 'dice_focal':
+        criterion = DiceFocalLoss(sigmoid=True)
+    else:
+        criterion = DiceCELoss(sigmoid=True)
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg['train']['learning_rate'])
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg['scheduler']['step_size'], gamma=cfg['scheduler']['gamma'])
 

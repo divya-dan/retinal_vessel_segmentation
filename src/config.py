@@ -7,6 +7,19 @@ default_config = {
         'data_root': 'data',              # Root folder for all datasets
         'train_val_split': 0.1,           # Fraction of training set to use for validation
         'random_seed': 42,                # For reproducibility
+        'image_size': '(512, 512)',       # Resize images to this size
+    },
+    'patch': {
+        'use': False,                    # Toggle to use patch-based training
+        'size': '(256, 256)',              # Patch size for training
+        'pos': 1,                        # Number of positive samples
+        'neg': 1,                        # Number of negative samples
+        'num_samples': 4,                # Total patches per image
+    },
+    'sliding_window': {
+        'roi_size': '(256, 256)',          # Size of sliding window patches
+        'sw_batch_size': 8,              # Batch size for sliding window inference
+        'overlap': 0.25,                 # Overlap ratio for sliding window
     },
     'model': {
         'unet': {
@@ -25,7 +38,8 @@ default_config = {
         'learning_rate': 1e-4,
         'batch_size': 8,
         'num_epochs': 50,
-        'val_interval': 1                # Validate every N epochs
+        'val_interval': 1,                # Validate every N epochs
+        'loss_function': 'dice_ce',         # Options: 'dice_ce' or 'dice_focal'
     },
     'optimizer': {
         'type': 'Adam',                   # Optimizer type
@@ -58,7 +72,7 @@ def load_config(config_path: str = 'configs/config.yaml') -> dict:
         current_file = os.path.abspath(__file__)
         project_root = os.path.dirname(os.path.dirname(current_file))
         config_path = os.path.join(project_root, config_path)
-    
+
     if not os.path.exists(config_path):
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, 'w') as f:

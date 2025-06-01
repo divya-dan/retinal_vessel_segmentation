@@ -15,6 +15,7 @@ REQUIRED_PACKAGES = [
     "scikit-learn",
     "tensorboard",
     "matplotlib",
+    "scikit-image",
 ]
 
 # Directories to ensure exist for the project structure

@@ -26,7 +26,8 @@ def infer_single_image(model, image_path, transform, device, cfg):
 
     with torch.no_grad():
         output = model(image_tensor)
-        pred = (output.sigmoid() > 0.5).float()
+        threshold = float(cfg.get("threshold", 0.55))
+        pred = (output.sigmoid() > threshold).float()
 
     visualize_inference(image_tensor[0], pred[0], os.path.basename(image_path), cfg, title="Predicted Vessel Mask")
 
@@ -48,7 +49,8 @@ def infer_batch(model, data_root, transform, device, cfg, num_samples=5):
         image_tensor = batch['image'].to(device)
         with torch.no_grad():
             output = model(image_tensor)
-            pred = (output.sigmoid() > 0.5).float()
+            threshold = float(cfg.get("threshold", 0.55))
+            pred = (output.sigmoid() > threshold).float()
 
         image_np = image_tensor[0].cpu().squeeze().numpy().transpose(1, 2, 0)
         pred_np = pred[0].cpu().squeeze().numpy()
