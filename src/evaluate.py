@@ -60,7 +60,7 @@ def evaluate():
 
     # Load model and weights
     model = get_unet_model(cfg).to(device)
-    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model.pth')
+    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_val_loss.pth')
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.eval()
 
