@@ -74,70 +74,140 @@ def train():
     else:
         criterion = DiceCELoss(sigmoid=True)
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=cfg['train']['learning_rate'])
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=cfg['scheduler']['step_size'], gamma=cfg['scheduler']['gamma'])
+    optimizer = torch.optim.Adam(
+        model.parameters(), 
+        lr=cfg['train']['learning_rate'],
+        weight_decay=cfg['train'].get('weight_decay', 1e-5)  # Add L2 regularization
+    )
+    
+    # Improved scheduler - Cosine Annealing with Warm Restarts
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+        optimizer, 
+        T_0=cfg['scheduler'].get('T_0', 10),
+        T_mult=cfg['scheduler'].get('T_mult', 2),
+        eta_min=cfg['scheduler'].get('eta_min', 1e-6)
+    )
 
-    # Metric
+    # Metrics
     dice_metric = DiceMetric(include_background=False, reduction="mean")
 
     # Logging
     writer = SummaryWriter(cfg['paths']['log_dir'])
+    
+    # Track both validation loss and dice
+    best_val_loss = float('inf')
     best_dice = 0.0
     patience = cfg['early_stopping']['patience']
     counter = 0
+    
+    # Learning rate tracking
+    initial_lr = cfg['train']['learning_rate']
 
     for epoch in range(cfg['train']['num_epochs']):
         print(f"Epoch {epoch+1}/{cfg['train']['num_epochs']}")
+        
+        # Training phase
         model.train()
         epoch_loss = 0
+        num_batches = 0
 
         for batch in tqdm(train_loader, desc="Training"):
             inputs, labels = batch["image"].to(device), batch["label"].to(device)
+            
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
+            
+            # Gradient clipping for stability
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            
             optimizer.step()
             epoch_loss += loss.item()
+            num_batches += 1
 
-        avg_epoch_loss = epoch_loss / len(train_loader)
-        writer.add_scalar("train/loss", avg_epoch_loss, epoch)
+        avg_train_loss = epoch_loss / num_batches
+        writer.add_scalar("train/loss", avg_train_loss, epoch)
+        writer.add_scalar("train/learning_rate", optimizer.param_groups[0]['lr'], epoch)
 
-        # Validation
+        # Validation phase
         if (epoch + 1) % cfg['train']['val_interval'] == 0:
             model.eval()
+            val_loss = 0
+            val_batches = 0
             dice_metric.reset()
+            
             with torch.no_grad():
                 for batch in tqdm(val_loader, desc="Validation"):
                     val_inputs, val_labels = batch["image"].to(device), batch["label"].to(device)
                     val_outputs = model(val_inputs)
-                    val_outputs = [AsDiscrete(threshold=0.5)(i) for i in decollate_batch(val_outputs)]
-                    val_labels = decollate_batch(val_labels)
-                    dice_metric(y_pred=val_outputs, y=val_labels)
+                    
+                    # Calculate validation loss
+                    v_loss = criterion(val_outputs, val_labels)
+                    val_loss += v_loss.item()
+                    val_batches += 1
+                    
+                    # Calculate Dice metric
+                    val_outputs_discrete = [AsDiscrete(threshold=0.5)(i) for i in decollate_batch(val_outputs)]
+                    val_labels_discrete = decollate_batch(val_labels)
+                    dice_metric(y_pred=val_outputs_discrete, y=val_labels_discrete)
 
+            avg_val_loss = val_loss / val_batches
             val_dice = dice_metric.aggregate().item()
             dice_metric.reset()
+            
+            # Log validation metrics
+            writer.add_scalar("val/loss", avg_val_loss, epoch)
             writer.add_scalar("val/dice", val_dice, epoch)
-            print(f"Validation Dice: {val_dice:.4f}")
+            
+            print(f"Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}, Val Dice: {val_dice:.4f}")
 
-            # Checkpointing
+            # Model selection based on validation loss (lower is better)
+            improved = False
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                improved = True
+                counter = 0
+                
+                # Save best model based on validation loss
+                ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_val_loss.pth')
+                if hasattr(model, 'module'):  # DataParallel case
+                    torch.save(model.module.state_dict(), ckpt_path)
+                else:
+                    torch.save(model.state_dict(), ckpt_path)
+                print(f"[checkpoint] Saved best model with Val Loss {avg_val_loss:.4f}")
+            
+            # Also save best Dice model for comparison
             if val_dice > best_dice:
                 best_dice = val_dice
-                counter = 0
-                ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model.pth')
-                torch.save(model.state_dict(), ckpt_path)
-                print(f"[checkpoint] Saved best model with Dice {val_dice:.4f}")
-            else:
+                ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_dice.pth')
+                if hasattr(model, 'module'):
+                    torch.save(model.module.state_dict(), ckpt_path)
+                else:
+                    torch.save(model.state_dict(), ckpt_path)
+                print(f"[checkpoint] Saved best Dice model with score {val_dice:.4f}")
+            
+            if not improved:
                 counter += 1
 
             if counter >= patience:
-                print(f"[early stopping] No improvement for {patience} epochs. Stopping early.")
+                print(f"[early stopping] No improvement in validation loss for {patience} epochs. Stopping early.")
                 break
 
         scheduler.step()
+        
+        # Periodic checkpoint saving
+        if (epoch + 1) % cfg['train'].get('checkpoint_interval', 50) == 0:
+            ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], f'checkpoint_epoch_{epoch+1}.pth')
+            if hasattr(model, 'module'):
+                torch.save(model.module.state_dict(), ckpt_path)
+            else:
+                torch.save(model.state_dict(), ckpt_path)
 
     writer.close()
     print("[train] Training complete.")
+    print(f"Best validation loss: {best_val_loss:.4f}")
+    print(f"Best validation Dice: {best_dice:.4f}")
 
 
 if __name__ == '__main__':
