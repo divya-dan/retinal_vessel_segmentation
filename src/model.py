@@ -14,6 +14,7 @@ project_root = os.path.dirname(project_root)
 sys.path.insert(0, project_root)
 
 from src.config import load_config
+from monai.networks.nets import SegResNet
 
 
 def get_unet_model(config):
@@ -40,6 +41,54 @@ def get_unet_model(config):
 
     return model
 
+
+def get_segresnet_model(config):
+    """
+    Instantiate a MONAI 2D SegResNet model based on config.yaml settings.
+    
+    Args:
+        config (dict): Configuration dictionary.
+        
+    Returns:
+        torch.nn.Module: Initialized SegResNet model
+    """
+    
+    net_cfg = config['model']['segresnet']
+    
+    model = SegResNet(
+        spatial_dims=2,
+        in_channels=net_cfg['in_channels'],
+        out_channels=net_cfg['out_channels'],
+        init_filters=net_cfg.get('init_filters', 8),
+        blocks_down=net_cfg.get('blocks_down', [1, 2, 2, 4]),
+        blocks_up=net_cfg.get('blocks_up', [1, 1, 1]),
+        dropout_prob=net_cfg.get('dropout_prob', 0.0),
+        norm=net_cfg.get('norm', 'BATCH')
+    )
+    
+    return model
+
+def get_model(config):
+    """
+    Get the appropriate model based on the model name in the config.
+    
+    Args:
+        config (dict): Configuration dictionary.
+        
+    Returns:
+        torch.nn.Module: Initialized model based on config specification
+        
+    Raises:
+        ValueError: If the model name is not supported
+    """
+    model_name = config['model'].get('name', '').lower()
+    
+    if model_name == 'unet':
+        return get_unet_model(config)
+    elif model_name == 'segresnet':
+        return get_segresnet_model(config)
+    else:
+        raise ValueError(f"Unsupported model name: {model_name}. Supported models: unet, segresnet")
 
 if __name__ == '__main__':
     cfg = load_config()

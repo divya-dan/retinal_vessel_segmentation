@@ -15,7 +15,7 @@ sys.path.insert(0, project_root)
 
 from src.config import load_config
 from src.dataset import get_dataloaders
-from src.model import get_unet_model
+from src.model import get_model
 # ————————————————————————————
 
 def compute_threshold_on_validation():
@@ -23,7 +23,7 @@ def compute_threshold_on_validation():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Build model and load your best‐model checkpoint
-    model = get_unet_model(cfg).to(device)
+    model = get_model(cfg).to(device)
     ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'checkpoint_epoch_100.pth')
     if not os.path.exists(ckpt_path):
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")

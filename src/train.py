@@ -25,7 +25,7 @@ sys.path.insert(0, project_root)
 
 from src.config import load_config
 from src.dataset import get_transforms, split_train_val
-from src.model import get_unet_model
+from src.model import get_model
 
 from torch.utils.data import Dataset
 
@@ -63,7 +63,7 @@ def train():
     val_loader = DataLoader(val_ds, batch_size=cfg['train']['batch_size'])
 
     # Build model
-    model = get_unet_model(cfg).to(device)
+    model = get_model(cfg).to(device)
     if cfg.get('train', {}).get('multi_gpu', False) and torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
 

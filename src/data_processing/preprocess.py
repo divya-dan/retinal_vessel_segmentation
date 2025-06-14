@@ -54,176 +54,190 @@ def split_train_val(train_folder: str, split_ratio: float, seed: int):
     print(f"[preprocess] Total: {len(all_pairs)}, Train: {len(train_pairs)}, Val: {len(val_pairs)}")
     return train_pairs, val_pairs
 
-def get_transforms(image_size=(1024, 1024), use_patches=False, patch_size=(256,256),
-                   pos=1, neg=1, num_samples=4):
+
+from monai import transforms as mt
+from monai.transforms import (
+    Compose, RandCropByPosNegLabeld, OneOf, Identityd, SomeOf,
+)
+
+def get_transforms(
+    image_size=(1024, 1024), use_patches=False, patch_size=(256,256),
+    pos=1, neg=1, num_samples=4,
+):
+    # --- 1) Base loading & scaling ---
+    base = [
+        mt.LoadImaged(keys=['image','label']),
+        mt.EnsureChannelFirstd(keys=['image','label']),
+        mt.ScaleIntensityd(keys=['image']),
+    ]
     if use_patches:
-        train_transforms = Compose([
-            mt.LoadImaged(keys=['image', 'label']),
-            mt.EnsureChannelFirstd(keys=['image', 'label']),
-            mt.ScaleIntensityd(keys=['image']),
-            RandCropByPosNegLabeld(
-                keys=['image','label'], label_key='label',
-                spatial_size=patch_size, pos=pos, neg=neg, num_samples=num_samples,
-                image_key='image', image_threshold=0
+        base.append(RandCropByPosNegLabeld(
+            keys=['image','label'], label_key='label',
+            spatial_size=patch_size, pos=pos, neg=neg,
+            num_samples=num_samples, image_key='image',
+            image_threshold=0
+        ))
+
+    # --- 2) Light / “standard” augmentations ---
+    standard = [
+        mt.RandFlipd(keys=['image','label'], prob=0.5, spatial_axis=0),
+        mt.RandRotate90d(keys=['image','label'], prob=0.5, max_k=3),
+        mt.RandZoomd(keys=['image','label'], prob=0.4,
+                     min_zoom=0.9, max_zoom=1.1),
+        mt.RandAdjustContrastd(keys='image', prob=0.3,
+                               gamma=(0.8,1.2)),
+    ]
+
+    # --- 3) Heavy spatial (pick 1 of 4 including skip for every sample) ---
+    heavy_spatial = SomeOf(
+        transforms=[
+            Identityd(keys=['image','label']),     # skip heavy transform (70%)
+            mt.Rand2DElasticd(
+                keys=['image','label'], prob=1.0,
+                spacing=(4, 4), magnitude_range=(2, 2),
+                mode=('bilinear','nearest')
             ),
-            mt.RandFlipd(keys=['image','label'], prob=0.5, spatial_axis=0),
-            mt.RandRotate90d(keys=['image','label'], prob=0.5, max_k=3),
-            mt.RandGaussianNoised(keys='image', prob=0.3, mean=0.0, std=0.1),
-            mt.RandBiasFieldd(keys='image', prob=0.3, coeff_range=(0.15, 0.5)),
-            mt.RandAdjustContrastd(keys='image', prob=0.3, gamma=(0.7, 1.5)),
-            mt.RandZoomd(keys=['image','label'], prob=0.3, min_zoom=0.9, max_zoom=1.1),
-            mt.ToTensord(keys=['image','label']),
-        ])
-    else:
-        train_transforms = Compose([
-            mt.LoadImaged(keys=['image','label']),
-            mt.EnsureChannelFirstd(keys=['image','label']),
-            mt.ScaleIntensityd(keys=['image']),
-            mt.RandFlipd(keys=['image','label'], prob=0.5, spatial_axis=0),
-            mt.RandRotate90d(keys=['image','label'], prob=0.5, max_k=3),
-            mt.RandGaussianNoised(keys='image', prob=0.3, mean=0.0, std=0.1),
-            mt.RandBiasFieldd(keys='image', prob=0.3, coeff_range=(0.15, 0.5)),
-            mt.RandAdjustContrastd(keys='image', prob=0.3, gamma=(0.7, 1.5)),
-            mt.RandZoomd(keys=['image','label'], prob=0.3, min_zoom=0.9, max_zoom=1.1),
-            mt.Resized(keys=['image','label'], spatial_size=image_size, mode=['bilinear','nearest']),
-            mt.ToTensord(keys=['image','label']),
-        ])
+            mt.RandGridDistortiond(
+                keys=['image','label'], prob=1.0,
+                num_cells=7, distort_limit=0.3
+            ),
+            mt.RandAffined(
+                keys=['image','label'], prob=1.0,
+                rotate_range=(0, 0), shear_range=(0.1, 0.1),
+                translate_range=(10, 10), scale_range=(0.9, 1.1),
+                mode=('bilinear','nearest'), padding_mode='reflection'
+            ),
+        ],
+        num_transforms=1,
+        weights=[0.7, 0.1, 0.1, 0.1],  # skip 70%, each heavy 10%
+        map_items=True,
+    )
+
+    # --- 4) Heavy intensity (pick 1 of 3 including skip for every sample) ---
+    heavy_intensity = SomeOf(
+        transforms=[
+            Identityd(keys=['image']),           # skip heavy op (80%)
+            mt.RandRicianNoised(
+                keys=['image'], prob=1.0,
+                mean=0.0, std=0.05
+            ),
+            mt.RandHistogramShiftd(
+                keys=['image'], prob=1.0,
+                num_control_points=256
+            ),
+        ],
+        num_transforms=1,
+        weights=[0.8, 0.1, 0.1],  # skip 80%, each heavy 10%
+        map_items=True,
+    )
+
+    # --- 5) Final resize / to tensor ---
+    final = []
+    if not use_patches:
+        final.append(mt.Resized(
+            keys=['image','label'],
+            spatial_size=image_size,
+            mode=['bilinear','nearest']
+        ))
+    final.append(mt.ToTensord(keys=['image','label']))
+
+    train_transforms = Compose(
+        base + standard + [heavy_spatial] + [heavy_intensity] + final
+    )
 
     val_transforms = Compose([
         mt.LoadImaged(keys=['image','label']),
         mt.EnsureChannelFirstd(keys=['image','label']),
         mt.ScaleIntensityd(keys=['image']),
-        mt.Resized(keys=['image','label'], spatial_size=image_size, mode=['bilinear','nearest']),
+        mt.Resized(
+            keys=['image','label'],
+            spatial_size=image_size,
+            mode=['bilinear','nearest']
+        ),
         mt.ToTensord(keys=['image','label']),
     ])
     test_transforms = val_transforms
 
     return train_transforms, val_transforms, test_transforms
 
-def visualize_augmentations(sample_pair, train_transforms):
-    steps = train_transforms.transforms
-    init_steps = steps[:3]
-    tail_steps = [t for t in steps[3:] if not isinstance(t, (mt.Resized, mt.ToTensord))]
 
-    # load once
-    sample = {'image': sample_pair['image'], 'label': sample_pair['label']}
-    for t in init_steps:
-        sample = t(sample)
-        # if we get back a list (from RandCropByPosNegLabeld), grab the first crop
-        if isinstance(sample, list):
-            sample = sample[0]
-
-    imgs = [('Original', (sample['image'], sample['label']))]
-
-    for t in tail_steps:
-        sample = t(sample)
-        # again, unwrap lists
-        if isinstance(sample, list):
-            sample = sample[0]
-
-        imgs.append((t.__class__.__name__, (sample['image'], sample['label'])))
-
-    # plotting code unchanged…
-    n = len(imgs)
-    ncols = min(4, n)
-    nrows = (n + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 4*nrows))
-    axes = axes.flatten()
-    for i, (name, (img, lbl)) in enumerate(imgs):
-        arr = img.numpy() if hasattr(img, 'numpy') else img
-        if arr.ndim == 3:
-            arr = np.transpose(arr, (1,2,0))
-            if arr.shape[2] == 1:
-                arr = arr[...,0]
-        axes[i].imshow(arr, cmap='gray' if arr.ndim==2 else None)
-        m = lbl.numpy() if hasattr(lbl, 'numpy') else lbl
-        if m.ndim > 2:
-            m = m.squeeze()
-        axes[i].imshow(m, cmap='jet', alpha=0.3)
-        axes[i].set_title(name)
-        axes[i].axis('off')
-    for j in range(n, len(axes)):
-        axes[j].axis('off')
-    plt.tight_layout()
-    plt.savefig('augmentation_visualization.png')
-    plt.close()
-
+import random
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 from matplotlib.patches import Rectangle
 from monai import transforms as mt
 from monai.transforms import Compose, RandCropByPosNegLabeld
-from matplotlib.gridspec import GridSpec
 
-def visualize_augmentations_with_box(sample_pair, train_transforms, patch_size):
-    # --- load full image & label as before ---
+def visualize_augmentations_grid(sample_pairs, train_transforms, patch_size):
+    """
+    sample_pairs: list of dicts [{'image':path,'label':path},…] (length=5)
+    train_transforms: your Compose() pipeline
+    patch_size: (ph, pw)
+    """
+    # 1) Build a loader for full-image display
     loader = Compose([
         mt.LoadImaged(keys=['image','label']),
         mt.EnsureChannelFirstd(keys=['image','label']),
         mt.ScaleIntensityd(keys=['image'])
     ])
-    data = loader({'image': sample_pair['image'], 'label': sample_pair['label']})
-    img_tensor, lbl_tensor = data['image'], data['label']   # (1,H,W)
-    img_disp = img_tensor[0].numpy()
-    H, W = img_disp.shape
-    ph, pw = patch_size
-
-    # pick a random patch
-    y0 = random.randint(0, H - ph)
-    x0 = random.randint(0, W - pw)
-
-    # figure out how many augmentations we’ll show
+    # 2) Extract only the “tail” augmentations you want to show per patch
     steps = train_transforms.transforms
     tail_steps = [
         t for t in steps
-        if not isinstance(t, (mt.LoadImaged, mt.EnsureChannelFirstd,
-                               mt.ScaleIntensityd, RandCropByPosNegLabeld,
-                               mt.Resized, mt.ToTensord))
+        if not isinstance(t, (
+            mt.LoadImaged, mt.EnsureChannelFirstd, mt.ScaleIntensityd,
+            RandCropByPosNegLabeld, mt.Resized, mt.ToTensord
+        ))
     ]
-    n_cols = 1 + len(tail_steps)  # 1 for original patch, rest for each aug
 
-    # --- Set up GridSpec: 2 rows, n_cols columns,
-    # row 0 spans all cols, row 1 has n_cols small subplots ---
-    fig = plt.figure(figsize=(4*n_cols, 8))
-    gs = GridSpec(2, n_cols, height_ratios=[1,1], figure=fig)
+    n = len(sample_pairs)
+    ncols = 2 + len(tail_steps)  # full image, original patch, + each aug
+    fig, axes = plt.subplots(n, ncols, figsize=(4*ncols, 4*n))
 
-    # Row 0: full image + red box, spanning all columns
-    ax_full = fig.add_subplot(gs[0, :])
-    ax_full.imshow(img_disp, cmap='gray')
-    rect = Rectangle((x0, y0), pw, ph, edgecolor='red', linewidth=2, fill=False)
-    ax_full.add_patch(rect)
-    ax_full.set_title('Full image with patch box')
-    ax_full.axis('off')
+    for i, sample_pair in enumerate(sample_pairs):
+        # — Load full image & label —
+        data = loader({'image': sample_pair['image'], 'label': sample_pair['label']})
+        img_tensor = data['image']   # (1, H, W)
+        lbl_tensor = data['label']   # (1, H, W)
+        img_disp = img_tensor[0].numpy()
+        H, W = img_disp.shape
+        ph, pw = patch_size
 
-    # Crop out the patch
-    patch_img = img_tensor[:, y0:y0+ph, x0:x0+pw]
-    patch_lbl = lbl_tensor[:, y0:y0+ph, x0:x0+pw]
+        # — Pick a random patch origin and draw box —
+        y0 = random.randint(0, H - ph)
+        x0 = random.randint(0, W - pw)
+        ax_full = axes[i, 0]
+        ax_full.imshow(img_disp, cmap='gray')
+        rect = Rectangle((x0, y0), pw, ph,
+                         edgecolor='red', linewidth=2, fill=False)
+        ax_full.add_patch(rect)
+        ax_full.set_title('Full image')
+        ax_full.axis('off')
 
-    # row 1, col 0: original patch
-    ax0 = fig.add_subplot(gs[1, 0])
-    orig = patch_img[0].numpy()
-    ax0.imshow(orig, cmap='gray')
-    ax0.imshow(patch_lbl[0].numpy(), cmap='jet', alpha=0.3)
-    ax0.set_title('Original patch')
-    ax0.axis('off')
+        # — Crop and show the original patch —
+        patch_img = img_tensor[:, y0:y0+ph, x0:x0+pw]
+        patch_lbl = lbl_tensor[:, y0:y0+ph, x0:x0+pw]
+        ax_orig = axes[i, 1]
+        disp_patch = patch_img[0].numpy()
+        ax_orig.imshow(disp_patch, cmap='gray')
+        ax_orig.imshow(patch_lbl[0].numpy(), cmap='jet', alpha=0.3)
+        ax_orig.set_title('Original patch')
+        ax_orig.axis('off')
 
-    # now run and plot each augmentation in its own column
-    sample = {'image': patch_img, 'label': patch_lbl}
-    for i, t in enumerate(tail_steps, start=1):
-        out = t(sample)
-        if isinstance(out, list): out = out[0]
-        sample = out
+        # — Run & show each augmentation in sequence —
+        sample = {'image': patch_img, 'label': patch_lbl}
+        for j, t in enumerate(tail_steps, start=2):
+            out = t(sample)
+            if isinstance(out, list): out = out[0]
+            sample = out
 
-        img_a = sample['image'].numpy()   # (1,ph,pw)
-        lbl_a = sample['label'].numpy()
-        disp_a = img_a[0]  # just H×W now
-
-        ax = fig.add_subplot(gs[1, i])
-        ax.imshow(disp_a, cmap='gray')
-        ax.imshow(lbl_a[0], cmap='jet', alpha=0.3)
-        ax.set_title(t.__class__.__name__)
-        ax.axis('off')
+            img_a = sample['image'].numpy()[0]  # H×W
+            lbl_a = sample['label'].numpy()[0]
+            ax = axes[i, j]
+            ax.imshow(img_a, cmap='gray')
+            ax.imshow(lbl_a, cmap='jet', alpha=0.3)
+            ax.set_title(t.__class__.__name__)
+            ax.axis('off')
 
     plt.tight_layout()
     plt.savefig('augmentation_visualization.png')
@@ -254,12 +268,9 @@ if __name__ == '__main__':
 
     if args.augment:
         # unpack patch size and call the new visualization
+        five = train_pairs[:5]
         ph, pw = patch_cfg.get('size', (256, 256))
-        visualize_augmentations_with_box(
-            sample_pair=train_pairs[0],
-            train_transforms=train_t,
-            patch_size=(ph, pw)
-        )
+        visualize_augmentations_grid(five, train_t, patch_size=(ph, pw))
         sys.exit(0)
 
         print("[preprocess] Augmented transforms ready.")

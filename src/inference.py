@@ -15,7 +15,7 @@ sys.path.insert(0, project_root)
 
 from src.config import load_config
 from src.dataset import get_image_mask_pairs, get_transforms
-from src.model import get_unet_model
+from src.model import get_model
 from monai.data import Dataset
 from torch.utils.data import DataLoader
 
@@ -92,7 +92,7 @@ def main():
     cfg = load_config()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = get_unet_model(cfg).to(device)
+    model = get_model(cfg).to(device)
     ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_val_loss.pth')
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.eval()

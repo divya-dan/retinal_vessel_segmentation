@@ -13,7 +13,7 @@ sys.path.insert(0, project_root)
 
 from src.config import load_config
 from src.dataset import get_dataloaders
-from src.model import get_unet_model
+from src.model import get_model
 from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
 
@@ -59,7 +59,7 @@ def evaluate():
     _, _, test_loader = get_dataloaders()
 
     # Load model and weights
-    model = get_unet_model(cfg).to(device)
+    model = get_model(cfg).to(device)
     ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_val_loss.pth')
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.eval()

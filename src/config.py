@@ -22,6 +22,16 @@ default_config = {
         'overlap': 0.25,                 # Overlap ratio for sliding window
     },
     'model': {
+        'name': 'segresnet',            # Model type: 'segresnet' or 'unet'
+        'segresnet': {
+            'in_channels': 3,             # RGB fundus images
+            'out_channels': 1,            # Binary vessel mask
+            'init_filters': 8,             # Initial number of filters
+            'blocks_down': [1, 2, 2, 4],   # Downsampling blocks
+            'blocks_up': [1, 1, 1],         # Upsampling blocks
+            'dropout_prob': 0.0,           # Dropout probability
+            'norm': 'BATCH',                # Normalization type
+        },
         'unet': {
             'in_channels': 3,             # RGB fundus images
             'out_channels': 1,            # Binary vessel mask
