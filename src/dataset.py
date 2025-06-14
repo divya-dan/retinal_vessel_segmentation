@@ -11,7 +11,7 @@ sys.path.insert(0, project_root)
 
 from monai.data import CacheDataset, SmartCacheDataset, DataLoader
 from src.config import load_config
-from src.data.preprocess import split_train_val, get_transforms, get_image_mask_pairs
+from src.data_processing.preprocess import split_train_val, get_transforms, get_image_mask_pairs
 
 """
 Dataset wrapper for retinal vessel segmentation.
