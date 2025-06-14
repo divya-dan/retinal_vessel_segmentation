@@ -24,7 +24,7 @@ def compute_threshold_on_validation():
 
     # Build model and load your best‐model checkpoint
     model = get_unet_model(cfg).to(device)
-    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model.pth')
+    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'checkpoint_epoch_100.pth')
     if not os.path.exists(ckpt_path):
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
