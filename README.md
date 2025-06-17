@@ -2,6 +2,20 @@
 
 ---
 
+## Introduction
+
+This repository provides a full pipeline for retinal vessel segmentation using the MAPLES-DR dataset (MESSIDOR Anatomical and Pathological Labels for Explainable Screening of Diabetic Retinopathy).
+
+**Features**:
+
+* Data acquisition from MAPLES-DR & MESSIDOR
+* Preprocessing (full-image & patch-based cropping)
+* Configurable MONAI U-Net and SegResNet models
+* Training with Dice+CE and Dice+Focal losses
+* Sliding-window inference with gaussian blending
+
+---
+
 ## Key Results
 To evaluate my pipeline, we conducted a comparison of U-Net and SegResNet architectures on the MAPLES-DR test set. In the comparison we examined, both full-image and patch-based sampling strategies, as well as CE and focal functions. The table below presents the mean Dice coefficients and standard deviations for each experimental setup, providing insight into the relative performance of each model and configuration. These results offer a quantitative basis for selecting optimal architectures and training strategies for retinal vessel segmentation tasks.
 The U-Net and SegResNet models were configured as follows:
@@ -26,8 +40,8 @@ The U-Net and SegResNet models were configured as follows:
 | ------------- | ----------- | -------------- | ----------------- |
 | U-Net         | full-image  | Dice+CE        | 0.837 ± 0.028     |
 | U-Net         | patches     | Dice+CE        | 0.827 ± 0.029     |
-| U-Net         | full-image  | Dice+Focal     | 0. ± 0.0          |
-| U-Net         | patches     | Dice+Focal     | 0. ± 0.0          |
+| U-Net         | full-image  | Dice+Focal     | 0.838 ± 0.028     |
+| U-Net         | patches     | Dice+Focal     | 0.829 ± 0.028     |
 | SegResNet     | full-image  | Dice+CE        | 0.832 ± 0.047     |
 | **SegResNet** | **patches** | **Dice+CE**    | **0.844 ± 0.029** |
 | SegResNet     | full-image  | Dice+Focal     | 0.834 ± 0.048     |
@@ -53,20 +67,6 @@ Below are representative **best** and **worst** performing examples for each con
 | SegResNet   | full-image  | Dice+Focal  | ![](./figures/config-segres-dice_focal-full_best.png) | ![](./figures/config-segres-dice_focal-full_worst.png) |
 | SegResNet   | patches     | Dice+Focal  | ![](./figures/config-segres-dice_focal-patch_best.png) | ![](./figures/config-segres-dice_focal-patch_worst.png) |
 
-
----
-
-## Introduction
-
-This repository provides a full pipeline for retinal vessel segmentation using the MAPLES-DR dataset (MESSIDOR Anatomical and Pathological Labels for Explainable Screening of Diabetic Retinopathy).
-
-**Features**:
-
-* Data acquisition from MAPLES-DR & MESSIDOR
-* Preprocessing (full-image & patch-based cropping)
-* Configurable MONAI U-Net and SegResNet models
-* Training with Dice+CE and Dice+Focal losses
-* Sliding-window inference with gaussian blending
 
 ---
 
