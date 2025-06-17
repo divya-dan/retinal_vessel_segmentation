@@ -92,6 +92,23 @@ def load_config(config_path: str = 'configs/config.yaml') -> dict:
     with open(config_path, 'r') as f:
         cfg = yaml.safe_load(f)
     print(f"[config] Loaded configuration from {config_path}")
+
+    # Create directories if following do not exist
+    # paths:
+        #   checkpoint_dir
+        #   log_dir
+        #   output_dir
+
+    # Create directories relative to project root
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for path in [cfg['paths']['checkpoint_dir'], cfg['paths']['log_dir'], cfg['paths']['output_dir']]:
+        full_path = os.path.join(project_root, path)
+         # Check if the directory exists, if not create it
+         # Using os.makedirs with exist
+        if not os.path.exists(full_path):
+            os.makedirs(full_path, exist_ok=True)
+            print(f"[config] Created directory: {full_path}")
+
     return cfg
 
 

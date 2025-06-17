@@ -87,13 +87,14 @@ def main():
     parser = argparse.ArgumentParser(description="Run inference on fundus images.")
     parser.add_argument('--image', type=str, help="Path to a single fundus image.")
     parser.add_argument('--batch', type=int, help="Number of random test samples to run inference on.")
+    parser.add_argument('--config', type=str, default=None, help="Path to the configuration file.")
     args = parser.parse_args()
 
-    cfg = load_config()
+    cfg = load_config(args.config)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = get_model(cfg).to(device)
-    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_val_loss.pth')
+    ckpt_path = os.path.join(cfg['paths']['checkpoint_dir'], 'best_model_dice.pth')
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
     model.eval()
 

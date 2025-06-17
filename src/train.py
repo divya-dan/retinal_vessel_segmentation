@@ -28,6 +28,7 @@ from src.dataset import get_transforms, split_train_val
 from src.model import get_model
 
 from torch.utils.data import Dataset
+import argparse
 
 class SimpleSegmentationDataset(Dataset):
     def __init__(self, data_list, transforms):
@@ -41,9 +42,8 @@ class SimpleSegmentationDataset(Dataset):
         return self.transforms(self.data_list[idx])
 
 set_determinism(seed=42)
-
-def train():
-    cfg = load_config()
+def train(config_file=None):
+    cfg = load_config(config_file) if config_file else load_config()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Load data
@@ -211,4 +211,9 @@ def train():
 
 
 if __name__ == '__main__':
-    train()
+    
+    parser = argparse.ArgumentParser(description='Train vessel segmentation model')
+    parser.add_argument('--config', type=str, help='Path to config file')
+    args = parser.parse_args()
+    
+    train(args.config)
