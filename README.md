@@ -24,7 +24,7 @@ The quantitative metrics above were computed on the held-out MAPLES-DR test set,
 
 Below are representative **best** and **worst** performing examples for each configuration. 
 
-```markdown
+
 | Model       | Sampling    | Loss        | Best Example | Worst Example |
 |-------------|-------------|-------------|--------------|---------------|
 | U-Net       | full-image  | Dice+CE     | ![](./figures/config-unet-dice_ce-full_best.png) | ![](./figures/config-unet-dice_ce-full_worst.png) |
@@ -35,7 +35,7 @@ Below are representative **best** and **worst** performing examples for each con
 | SegResNet   | patches     | Dice+CE     | ![](./figures/config-segres-dice_ce-patch_best.png) | ![](./figures/config-segres-dice_ce-patch_worst.png) |
 | SegResNet   | full-image  | Dice+Focal  | ![](./figures/config-segres-dice_focal-full_best.png) | ![](./figures/config-segres-dice_focal-full_worst.png) |
 | SegResNet   | patches     | Dice+Focal  | ![](./figures/config-segres-dice_focal-patch_best.png) | ![](./figures/config-segres-dice_focal-patch_worst.png) |
-```
+
 
 ---
 
