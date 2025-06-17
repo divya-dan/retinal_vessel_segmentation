@@ -1,158 +1,140 @@
 # Retinal Vessel Segmentation with MAPLES-DR
 
----
+A complete pipeline for retinal blood vessel segmentation using deep learning models on the MAPLES-DR dataset (MESSIDOR Anatomical and Pathological Labels for Explainable Screening of Diabetic Retinopathy).
 
-## Introduction
+## What This Project Does
 
-This repository provides a full pipeline for retinal vessel segmentation using the MAPLES-DR dataset (MESSIDOR Anatomical and Pathological Labels for Explainable Screening of Diabetic Retinopathy).
+This project helps detect blood vessels in retinal images, which is important for diagnosing diabetic retinopathy and other eye diseases. Instead of manually tracing vessels, our AI models can do this automatically.
 
-**Features**:
+**Key Features:**
+- Downloads and processes MAPLES-DR & MESSIDOR datasets automatically
+- Supports both full-image and patch-based training approaches
+- Implements U-Net and SegResNet architectures using MONAI
+- Multiple loss functions (Dice+CrossEntropy, Dice+Focal)
+- Smart inference with sliding-window technique and gaussian blending
 
-* Data acquisition from MAPLES-DR & MESSIDOR
-* Preprocessing (full-image & patch-based cropping)
-* Configurable MONAI U-Net and SegResNet models
-* Training with Dice+CE and Dice+Focal losses
-* Sliding-window inference with gaussian blending
+## Performance Results
 
----
+I tested different model configurations on the MAPLES-DR test set to find what works best. Here are the results comparing U-Net vs SegResNet with different training strategies:
 
-## Key Results
-To evaluate my pipeline, we conducted a comparison of U-Net and SegResNet architectures on the MAPLES-DR test set. In the comparison we examined, both full-image and patch-based sampling strategies, as well as CE and focal functions. The table below presents the mean Dice coefficients and standard deviations for each experimental setup, providing insight into the relative performance of each model and configuration. These results offer a quantitative basis for selecting optimal architectures and training strategies for retinal vessel segmentation tasks.
-The U-Net and SegResNet models were configured as follows:
-- **U-Net**:
-  - `in_channels`: 3
-  - `out_channels`: 1
-  - `channels`: [16, 32, 64, 128, 256]
-  - `strides`: [2, 2, 2, 2]
-  - `num_res_units`: 2
-  - `norm`: BATCH
+**Model Configurations:**
+- **U-Net**: 5-layer encoder-decoder with residual connections
+  - Channels: [16, 32, 64, 128, 256], Batch normalization
+- **SegResNet**: Lighter model with residual blocks  
+  - 8 initial filters, variable block depths, Batch normalization
 
-- **SegResNet**:
-  - `in_channels`: 3
-  - `out_channels`: 1
-  - `init_filters`: 8
-  - `blocks_down`: [1, 2, 2, 4]
-  - `blocks_up`: [1, 1, 1]
-  - `dropout_prob`: 0.0
-  - `norm`: BATCH
+**Results (Dice Score - higher is better):**
 
-| Model         | Sampling    | Loss           | Dice (Mean ± Std) |
-| ------------- | ----------- | -------------- | ----------------- |
-| U-Net         | full-image  | Dice+CE        | 0.837 ± 0.028     |
-| U-Net         | patches     | Dice+CE        | 0.827 ± 0.029     |
-| U-Net         | full-image  | Dice+Focal     | 0.838 ± 0.028     |
-| U-Net         | patches     | Dice+Focal     | 0.829 ± 0.028     |
-| SegResNet     | full-image  | Dice+CE        | 0.832 ± 0.047     |
-| **SegResNet** | **patches** | **Dice+CE**    | **0.844 ± 0.029** |
-| SegResNet     | full-image  | Dice+Focal     | 0.834 ± 0.048     |
-| SegResNet     | patches     | Dice+Focal     | 0.842 ± 0.029     |
+| Model         | Training Strategy | Loss Function  | Dice Score        |
+|---------------|-------------------|----------------|-------------------|
+| U-Net         | Full Image        | Dice+CE        | 0.837 ± 0.028     |
+| U-Net         | Patches           | Dice+CE        | 0.827 ± 0.029     |
+| U-Net         | Full Image        | Dice+Focal     | 0.838 ± 0.028     |
+| U-Net         | Patches           | Dice+Focal     | 0.829 ± 0.028     |
+| SegResNet     | Full Image        | Dice+CE        | 0.832 ± 0.047     |
+| **SegResNet** | **Patches**       | **Dice+CE**    | **0.844 ± 0.029**  |
+| SegResNet     | Full Image        | Dice+Focal     | 0.834 ± 0.048     |
+| SegResNet     | Patches           | Dice+Focal     | 0.842 ± 0.029     |
 
-The quantitative metrics above were computed on the held-out MAPLES-DR test set, with a threshold of 0.55.
+**Winner:** SegResNet with patch-based training and Dice+CE loss achieved the best performance!
 
----
+*Results computed on held-out test set with 0.6 threshold.*
 
-## Qualitative Examples
+## Visual Examples
 
-Below are representative **best** and **worst** performing examples for each configuration. 
+Want to see how well the models work? Check out the best and worst predictions for each configuration:
 
+| Model       | Strategy    | Loss        | Best Result | Worst Result |
+|-------------|-------------|-------------|-------------|--------------|
+| U-Net       | Full Image  | Dice+CE     | ![Best](./figures/config-unet-dice_ce-full_best.png) | ![Worst](./figures/config-unet-dice_ce-full_worst.png) |
+| U-Net       | Patches     | Dice+CE     | ![Best](./figures/config-unet-dice_ce-patch_best.png) | ![Worst](./figures/config-unet-dice_ce-patch_worst.png) |
+| U-Net       | Full Image  | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-full_best.png) | ![Worst](./figures/config-unet-dice_focal-full_worst.png) |
+| U-Net       | Patches     | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-patch_best.png) | ![Worst](./figures/config-unet-dice_focal-patch_worst.png) |
+| SegResNet   | Full Image  | Dice+CE     | ![Best](./figures/config-segres-dice_ce-full_best.png) | ![Worst](./figures/config-segres-dice_ce-full_worst.png) |
+| SegResNet   | Patches     | Dice+CE     | ![Best](./figures/config-segres-dice_ce-patch_best.png) | ![Worst](./figures/config-segres-dice_ce-patch_worst.png) |
+| SegResNet   | Full Image  | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-full_best.png) | ![Worst](./figures/config-segres-dice_focal-full_worst.png) |
+| SegResNet   | Patches     | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-patch_best.png) | ![Worst](./figures/config-segres-dice_focal-patch_worst.png) |
 
-| Model       | Sampling    | Loss        | Best Example | Worst Example |
-|-------------|-------------|-------------|--------------|---------------|
-| U-Net       | full-image  | Dice+CE     | ![](./figures/config-unet-dice_ce-full_best.png) | ![](./figures/config-unet-dice_ce-full_worst.png) |
-| U-Net       | patches     | Dice+CE     | ![](./figures/config-unet-dice_ce-patch_best.png) | ![](./figures/config-unet-dice_ce-patch_worst.png) |
-| U-Net       | full-image  | Dice+Focal  | ![](./figures/config-unet-dice_focal-full_best.png) | ![](./figures/config-unet-dice_focal-full_worst.png) |
-| U-Net       | patches     | Dice+Focal  | ![](./figures/config-unet-dice_focal-patch_best.png) | ![](./figures/config-unet-dice_focal-patch_worst.png) |
-| SegResNet   | full-image  | Dice+CE     | ![](./figures/config-segres-dice_ce-full_best.png) | ![](./figures/config-segres-dice_ce-full_worst.png) |
-| SegResNet   | patches     | Dice+CE     | ![](./figures/config-segres-dice_ce-patch_best.png) | ![](./figures/config-segres-dice_ce-patch_worst.png) |
-| SegResNet   | full-image  | Dice+Focal  | ![](./figures/config-segres-dice_focal-full_best.png) | ![](./figures/config-segres-dice_focal-full_worst.png) |
-| SegResNet   | patches     | Dice+Focal  | ![](./figures/config-segres-dice_focal-patch_best.png) | ![](./figures/config-segres-dice_focal-patch_worst.png) |
+## How to Use This Project
 
+### Step 1: Setup
 
----
+Clone the repository and install everything you need:
+
+```bash
+git clone <repo-url>
+cd retinal_vessel_segmentation
+python src/env_setup.py  # This installs all dependencies and creates folders
+```
+
+### Step 2: Get the Data
+
+Download the 12 MESSIDOR zip files (`Base11.zip` to `Base34.zip`) and place them in `data/messidor/`. Then run:
+
+```bash
+python src/data_processing/acquisition.py
+```
+
+This will automatically extract and organize all the images for you.
+
+### Step 3: Prepare Training Data
+
+Process the images and create training/validation splits:
+
+```bash
+python src/data_processing/preprocess.py
+```
+
+This creates both full-image and patch-based datasets.
+
+### Step 4: Train Your Model
+
+Create or modify a config file in `configs/` folder, then start training:
+
+```bash
+python src/train.py --config configs/your-experiment.yaml
+```
+
+### Step 5: Test on New Images
+
+Run inference on single images or batches:
+
+```bash
+# Test single image
+python src/inference.py --image path/to/your/image.jpg
+
+# Test on 5 random samples
+python src/inference.py --batch 5
+```
 
 ## Project Structure
 
 ```
-├── configs/               # YAML configs for each experiment
-├── data/                  # Raw and processed data
+retinal_vessel_segmentation/
+├── configs/                    # Experiment configurations
+├── data/                      # Dataset storage
 ├── scripts/
-│   └── summarize_results.py  
+│   └── summarize_results.py   # Analysis tools
 ├── src/
 │   ├── data_processing/
-│   │   ├── acquisition.py
-│   │   ├── preprocess.py
-│   ├── env_setup.py
-│   ├── config.py
-│   ├── dataset.py
-│   ├── model.py
-│   ├── train.py
-│   ├── evaluate.py
-│   └── inference.py
+│   │   ├── acquisition.py     # Download & organize data
+│   │   └── preprocess.py      # Image preprocessing
+│   ├── env_setup.py          # Environment setup
+│   ├── config.py             # Configuration management
+│   ├── dataset.py            # Data loading
+│   ├── model.py              # Neural network models
+│   ├── train.py              # Training pipeline
+│   ├── evaluate.py           # Model evaluation
+│   └── inference.py          # Prediction on new images
 └── README.md
 ```
 
----
+## License
 
-## Installation & Environment Setup
 
-1. Clone the repo:
 
-   ```bash
-   git clone <repo-url>
-   cd retinal_vessel_segmentation
-   ```
-2. Install dependencies and create folders:
-
-   ```bash
-   python src/env_setup.py
-   ```
-
----
-
-## Data Acquisition
-
-Place the 12 MESSIDOR zip archives (`Base11.zip`…`Base34.zip`) or extracted images into `data/messidor/`. Then run:
-
-```bash
-python src/data/acquisition.py
-```
-
----
-
-## Preprocessing & Dataset
-
-Preprocess and split training data (full-image or patches):
-
-```bash
-python src/data/preprocess.py
-```
-
----
-
-## Training
-
-Configure experiment in `configs/<your-config>.yaml`, then run:
-
-```bash
-python src/train.py --config configs/<your-config>.yaml
-```
-
----
-
-## Inference CLI
-
-Single-image or batch inference:
-
-```bash
-# Single image
-python src/inference.py --image path/to/image.jpg
-
-# Batch of 5 random samples
-python src/inference.py --batch 5
-```
 ## Citation
 
----
-## License
+
 
 ---
