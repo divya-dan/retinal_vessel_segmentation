@@ -3,7 +3,23 @@
 ---
 
 ## Key Results
+The U-Net and SegResNet models were configured as follows:
+- **U-Net**:
+  - `in_channels`: 3
+  - `out_channels`: 1
+  - `channels`: [16, 32, 64, 128, 256]
+  - `strides`: [2, 2, 2, 2]
+  - `num_res_units`: 2
+  - `norm`: BATCH
 
+- **SegResNet**:
+  - `in_channels`: 3
+  - `out_channels`: 1
+  - `init_filters`: 8
+  - `blocks_down`: [1, 2, 2, 4]
+  - `blocks_up`: [1, 1, 1]
+  - `dropout_prob`: 0.0
+  - `norm`: BATCH
 
 | Model         | Sampling    | Loss           | Dice (Mean ± Std) |
 | ------------- | ----------- | -------------- | ----------------- |
