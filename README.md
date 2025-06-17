@@ -27,14 +27,14 @@ Below are representative **best** and **worst** performing examples for each con
 ```markdown
 | Model       | Sampling    | Loss        | Best Example | Worst Example |
 |-------------|-------------|-------------|--------------|---------------|
-| U-Net       | full-image  | Dice+CE     | ![](./study/unet-dice_ce-full/outputs/figures/qualitative/config-unet-dice_ce-full_best.png) | ![](./study/unet-dice_ce-full/outputs/figures/qualitative/config-unet-dice_ce-full_worst.png) |
-| U-Net       | patches     | Dice+CE     | ![](./study/unet-dice_ce-patch/outputs/figures/qualitative/config-unet-dice_ce-patch_best.png) | ![](./study/unet-dice_ce-patch/outputs/figures/qualitative/config-unet-dice_ce-patch_worst.png) |
-| U-Net       | full-image  | Dice+Focal  | ![](./study/unet-dice_focal-full/outputs/figures/qualitative/config-unet-dice_focal-full_best.png) | ![](./study/unet-dice_focal-full/outputs/figures/qualitative/config-unet-dice_focal-full_worst.png) |
-| U-Net       | patches     | Dice+Focal  | ![](./study/unet-dice_focal-patch/outputs/figures/qualitative/config-unet-dice_focal-patch_best.png) | ![](./study/unet-dice_focal-patch/outputs/figures/qualitative/config-unet-dice_focal-patch_worst.png) |
-| SegResNet   | full-image  | Dice+CE     | ![](./study/segres-dice_ce-full/outputs/figures/qualitative/config-segres-dice_ce-full_best.png) | ![](./study/segres-dice_ce-full/outputs/figures/qualitative/config-segres-dice_ce-full_worst.png) |
-| SegResNet   | patches     | Dice+CE     | ![](./study/segres-dice_ce-patch/outputs/figures/qualitative/config-segres-dice_ce-patch_best.png) | ![](./study/segres-dice_ce-patch/outputs/figures/qualitative/config-segres-dice_ce-patch_worst.png) |
-| SegResNet   | full-image  | Dice+Focal  | ![](./study/segres-dice_focal-full/outputs/figures/qualitative/config-segres-dice_focal-full_best.png) | ![](./study/segres-dice_focal-full/outputs/figures/qualitative/config-segres-dice_focal-full_worst.png) |
-| SegResNet   | patches     | Dice+Focal  | ![](./study/segres-dice_focal-patch/outputs/figures/qualitative/config-segres-dice_focal-patch_best.png) | ![](./study/segres-dice_focal-patch/outputs/figures/qualitative/config-segres-dice_focal-patch_worst.png) |
+| U-Net       | full-image  | Dice+CE     | ![](./figures/config-unet-dice_ce-full_best.png) | ![](./figures/config-unet-dice_ce-full_worst.png) |
+| U-Net       | patches     | Dice+CE     | ![](./figures/config-unet-dice_ce-patch_best.png) | ![](./figures/config-unet-dice_ce-patch_worst.png) |
+| U-Net       | full-image  | Dice+Focal  | ![](./figures/config-unet-dice_focal-full_best.png) | ![](./figures/config-unet-dice_focal-full_worst.png) |
+| U-Net       | patches     | Dice+Focal  | ![](./figures/config-unet-dice_focal-patch_best.png) | ![](./figures/config-unet-dice_focal-patch_worst.png) |
+| SegResNet   | full-image  | Dice+CE     | ![](./figures/config-segres-dice_ce-full_best.png) | ![](./figures/config-segres-dice_ce-full_worst.png) |
+| SegResNet   | patches     | Dice+CE     | ![](./figures/config-segres-dice_ce-patch_best.png) | ![](./figures/config-segres-dice_ce-patch_worst.png) |
+| SegResNet   | full-image  | Dice+Focal  | ![](./figures/config-segres-dice_focal-full_best.png) | ![](./figures/config-segres-dice_focal-full_worst.png) |
+| SegResNet   | patches     | Dice+Focal  | ![](./figures/config-segres-dice_focal-patch_best.png) | ![](./figures/config-segres-dice_focal-patch_worst.png) |
 ```
 
 ---
