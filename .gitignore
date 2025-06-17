@@ -178,6 +178,7 @@ cython_debug/
 
 # VS code settings and workspace files
 .vscode/
+.VSCodeCounter/
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Project-specific ignores
