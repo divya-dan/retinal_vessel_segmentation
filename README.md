@@ -3,6 +3,7 @@
 ---
 
 ## Key Results
+To evaluate my pipeline, we conducted a comparison of U-Net and SegResNet architectures on the MAPLES-DR test set. In the comparison we examined, both full-image and patch-based sampling strategies, as well as CE and focal functions. The table below presents the mean Dice coefficients and standard deviations for each experimental setup, providing insight into the relative performance of each model and configuration. These results offer a quantitative basis for selecting optimal architectures and training strategies for retinal vessel segmentation tasks.
 The U-Net and SegResNet models were configured as follows:
 - **U-Net**:
   - `in_channels`: 3
