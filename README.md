@@ -9,12 +9,12 @@
 | ------------- | ----------- | -------------- | ----------------- |
 | U-Net         | full-image  | Dice+CE        | 0.837 ± 0.028     |
 | U-Net         | patches     | Dice+CE        | 0.827 ± 0.029     |
-| U-Net         | full-image  | Dice+Focal     | 0. ± 0.0     |
-| U-Net         | patches     | Dice+Focal     | 0. ± 0.0     |
+| U-Net         | full-image  | Dice+Focal     | 0. ± 0.0          |
+| U-Net         | patches     | Dice+Focal     | 0. ± 0.0          |
 | SegResNet     | full-image  | Dice+CE        | 0.832 ± 0.047     |
-| SegResNet     | patches     | Dice+CE        | 0.844 ± 0.029     |
+| **SegResNet** | **patches** | **Dice+CE**    | **0.844 ± 0.029** |
 | SegResNet     | full-image  | Dice+Focal     | 0.834 ± 0.048     |
-| **SegResNet** | **patches** | **Dice+Focal** | **0.842 ± 0.029** |
+| SegResNet     | patches     | Dice+Focal     | 0.842 ± 0.029     |
 
 The quantitative metrics above were computed on the held-out MAPLES-DR test set, with a threshold of 0.55.
 
