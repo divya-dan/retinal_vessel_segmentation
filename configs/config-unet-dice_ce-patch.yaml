@@ -6,7 +6,7 @@ data:
   - 1024
   - 1024
 patch:
-  use: false
+  use: true
   size:
   - 256
   - 256
@@ -20,7 +20,7 @@ sliding_window:
   sw_batch_size: 32
   overlap: 0.5
 model:
-  name: segresnet
+  name: unet
   segresnet:
     in_channels: 3
     out_channels: 1
@@ -57,8 +57,8 @@ train:
   device: cuda
   seed: 42
   learning_rate: 0.0001
-  batch_size: 2
-  num_epochs: 50
+  batch_size: 4
+  num_epochs: 100
   val_interval: 1
   loss_function: dice_ce
 optimizer:
@@ -71,7 +71,7 @@ early_stopping:
   metric: val_dice
   patience: 5
 paths:
-  checkpoint_dir: study/segresnet/models
-  log_dir: study/segresnet/outputs/logs
-  output_dir: study/segresnet/outputs
+  checkpoint_dir: study/unet-dice_ce-patch/models
+  log_dir: study/unet-dice_ce-patch/outputs/logs
+  output_dir: study/unet-dice_ce-patch/outputs
 threshold: 0.6
