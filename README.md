@@ -131,10 +131,37 @@ retinal_vessel_segmentation/
 
 ## License
 
+This project is licensed under the MIT License.
 
+
+
+---
 
 ## Citation
 
+If you use this project or datasets, please cite the following works:
 
+### MAPLES-DR Dataset
+
+Lareyre, F., Luong, M., Millet, P. et al.  
+**MAPLES-DR: MESSIDOR Anatomical and Pathological Labels for Explainable Screening of Diabetic Retinopathy**  
+*Scientific Data*, 11, 184 (2024).  
+https://doi.org/10.1038/s41597-024-03739-6
+
+
+### MESSIDOR Dataset
+
+The Messidor database is provided for research and educational purposes only.  
+**Please acknowledge** its use as follows:
+
+> Provided by Messidor program partners  
+> (see https://www.adcis.net/fr/logiciels-tiers/messidor-fr/ )
+
+If you use the Messidor database in your research, **please cite** the following paper:
+
+Decencière et al.  
+**Feedback on a publicly distributed database: the Messidor database**  
+*Image Analysis & Stereology*, Vol. 33, No. 3, pp. 231–234, 2014.  
+https://doi.org/10.5566/ias.1155
 
 ---
