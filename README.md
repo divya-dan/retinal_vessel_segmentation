@@ -23,6 +23,29 @@ I tested different model configurations on the MAPLES-DR test set to find what w
 - **SegResNet**: Lighter model with residual blocks  
   - 8 initial filters, variable block depths, Batch normalization
 
+### Training and Validation Loss Curves
+
+Both U-Net and SegResNet converge steadily across all settings, but their optimal training strategy differs:
+
+- **SegResNet**  
+  - Benefits noticeably from patch-based training, reaching its highest mean Dice (0.844) with Dice + CE loss.  
+  - Patch curves converge more smoothly and yield lower validation loss than full-image runs, suggesting that focusing on high-detail regions helps its residual blocks generalize better.
+
+- **U-Net**  
+  - Performs slightly better when trained on full images, with a top Dice of 0.838 using Dice + Focal.  
+  - Patch-based training shows a modest drop (Dice ≈ 0.827–0.829), while its full-image curves descend faster early on and maintain a consistent advantage.
+
+- **Loss Choice**  
+  - Dice + CE vs. Dice + Focal has minimal impact on final quality for either model (differences are within run-to-run variance).
+
+**Practice takeaway**: if you’re using SegResNet, patch-based sampling is worth the extra bookkeeping; for U-Net, full-frame training is preferable. Beyond that, Dice + CE or Dice + Focal can be used interchangeably without sacrificing accuracy.
+
+![Training loss](./figures/train_loss.png)  
+*Figure: Training loss curves for U-Net and SegResNet under different sampling and loss settings.*
+
+![Validation loss](./figures/val_loss.png)  
+*Figure: Validation loss curves corresponding to the training runs above.*  
+
 **Results (Dice Score - higher is better):**
 
 | Model         | Training Strategy | Loss Function  | Dice Score        |
