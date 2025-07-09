@@ -41,6 +41,7 @@ Here’s a concise summary of the best validation‐loss achieved by each config
 ![Validation loss](./figures/validation-loss.png)  
 *Figure: Validation loss curves.*  
 
+*All early stops in the training logs are due to the built-in early-stopping mechanism. All runs that “stopped early” hit the patience limit of 5 non-improving validation checks and then exited.*
 ### Key Conclusions
 
 - **SegResNet outperforms U-Net across the board.**  
