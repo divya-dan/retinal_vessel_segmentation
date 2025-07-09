@@ -71,16 +71,16 @@ Use **SegResNet** trained on **full images** with **Dice + Focal** loss for the 
 
 Want to see how well the models work? Check out the best and worst predictions for each configuration:
 
-| Model       | Strategy    | Loss        | Best Result | Worst Result |
-|-------------|-------------|-------------|-------------|--------------|
-| U-Net       | Full Image  | Dice+CE     | ![Best](./figures/config-unet-dice_ce-full_best.png) | ![Worst](./figures/config-unet-dice_ce-full_worst.png) |
-| U-Net       | Patches     | Dice+CE     | ![Best](./figures/config-unet-dice_ce-patch_best.png) | ![Worst](./figures/config-unet-dice_ce-patch_worst.png) |
-| U-Net       | Full Image  | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-full_best.png) | ![Worst](./figures/config-unet-dice_focal-full_worst.png) |
-| U-Net       | Patches     | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-patch_best.png) | ![Worst](./figures/config-unet-dice_focal-patch_worst.png) |
-| SegResNet   | Full Image  | Dice+CE     | ![Best](./figures/config-segres-dice_ce-full_best.png) | ![Worst](./figures/config-segres-dice_ce-full_worst.png) |
-| SegResNet   | Patches     | Dice+CE     | ![Best](./figures/config-segres-dice_ce-patch_best.png) | ![Worst](./figures/config-segres-dice_ce-patch_worst.png) |
-| SegResNet   | Full Image  | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-full_best.png) | ![Worst](./figures/config-segres-dice_focal-full_worst.png) |
-| SegResNet   | Patches     | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-patch_best.png) | ![Worst](./figures/config-segres-dice_focal-patch_worst.png) |
+| Model       | Strategy    | Loss        | Example |
+|-------------|-------------|-------------|-------------|
+| SegResNet   | Full Image  | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-full_best.png) |
+| SegResNet   | Patches     | Dice+CE     | ![Best](./figures/config-segres-dice_ce-patch_best.png) |
+| SegResNet   | Full Image  | Dice+CE     | ![Best](./figures/config-segres-dice_ce-full_best.png) |
+| SegResNet   | Patches     | Dice+Focal  | ![Best](./figures/config-segres-dice_focal-patch_best.png) |
+| U-Net       | Full Image  | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-full_best.png) |
+| U-Net       | Full Image  | Dice+CE     | ![Best](./figures/config-unet-dice_ce-full_best.png) |
+| U-Net       | Patches     | Dice+Focal  | ![Best](./figures/config-unet-dice_focal-patch_best.png) |
+| U-Net       | Patches     | Dice+CE     | ![Best](./figures/config-unet-dice_ce-patch_best.png) |
 
 ## How to Use This Project
 
