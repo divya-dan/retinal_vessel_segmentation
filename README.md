@@ -38,7 +38,7 @@ Here’s a concise summary of the best validation‐loss achieved by each config
 | U-Net     | Patch         | Dice + Focal         | 0.4079       | 199   |
 | U-Net     | Patch         | Dice + CrossEntropy  | 0.8310       | 121   |
 
-![Validation loss](./figures/validation-loss.png)  
+![Validation loss](./figures/validation_loss.png)  
 *Figure: Validation loss curves.*  
 
 *All early stops in the training logs are due to the built-in early-stopping mechanism. All runs that “stopped early” hit the patience limit of 5 non-improving validation checks and then exited.*
