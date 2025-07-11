@@ -58,7 +58,7 @@ train:
   seed: 42
   learning_rate: 0.0001
   batch_size: 4
-  num_epochs: 200
+  num_epochs: 250
   val_interval: 1
   loss_function: dice_focal
 optimizer:
@@ -69,7 +69,7 @@ scheduler:
   gamma: 0.5
 early_stopping:
   metric: val_dice
-  patience: 5
+  patience: 25
 paths:
   checkpoint_dir: study/unet-dice_focal-patch/models
   log_dir: study/unet-dice_focal-patch/outputs/logs

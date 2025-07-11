@@ -217,3 +217,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     train(args.config)
+
+    # print training complemented for config
+    if args.config:
+        print(f"\033[31mTraining completed for config: {args.config}\033[0m")
+    else:
+        print("Training completed with default configuration.")
