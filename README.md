@@ -53,23 +53,9 @@ Based on the analysis of the training and validation loss curves across various 
 
 *All early stops in the training logs are due to the built-in early-stopping mechanism. All runs that “stopped early” hit the patience limit of 25 non-improving validation checks and then exited.*
 
-Here’s a concise summary of the best validation‐loss achieved by each configuration (minimized over all epochs), sorted from lowest (best) to highest:
-
-| Model     | Training Data | Loss Function        | Min Val Loss | Epoch |
-|-----------|---------------|----------------------|--------------|-------|
-| SegResNet | Full images   | Dice + Focal         | 0.2902       | 92    |
-| SegResNet | Patch         | Dice + CrossEntropy  | 0.3101       | 192   |
-| SegResNet | Full images   | Dice + CrossEntropy  | 0.3108       | 113   |
-| SegResNet | Patch         | Dice + Focal         | 0.3262       | 146   |
-| U-Net     | Full images   | Dice + Focal         | 0.3309       | 130   |
-| U-Net     | Full images   | Dice + CrossEntropy  | 0.3717       | 133   |
-| U-Net     | Patch         | Dice + Focal         | 0.4079       | 199   |
-| U-Net     | Patch         | Dice + CrossEntropy  | 0.8310       | 121   |
-
-
 ### Visual Examples
 
-Want to see how well the models work? Check out the best and worst predictions for each configuration:
+Want to see how well the models work? Check out the best predictions for each configuration:
 
 | Model       | Strategy    | Loss        | Example |
 |-------------|-------------|-------------|-------------|
