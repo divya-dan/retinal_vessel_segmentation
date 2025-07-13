@@ -15,15 +15,43 @@ This project helps detect blood vessels in retinal images, which is important fo
 
 ## Performance Results
 
-I tested different model configurations on the MAPLES-DR test set to find what works best. Here are the results comparing U-Net vs SegResNet with different training strategies:
+I tested different configurations on the MAPLES-DR data set to find what works best. Here are the results comparing U-Net vs SegResNet with different training strategies:
 
 **Model Configurations:**
 - **U-Net**: 5-layer encoder-decoder with residual connections
   - Channels: [16, 32, 64, 128, 256], Batch normalization
 - **SegResNet**: Lighter model with residual blocks  
   - 8 initial filters, variable block depths, Batch normalization
+
+**Losses:**
+- **Dice CrossEntropy**
+- **Dice Focal**
+
+**Losses:**
+- **Full images (1024x1024)**
+- **Patches (256x256)**
   
-### Validation Loss Comparison Summary
+### Observations from the study
+Based on the analysis of the training and validation loss curves across various configurations, several observations can be made:
+
+- Overall Learning Trend: All implemented models and training strategies appear to demonstrate a general trend of decreasing training and validation losses over the epochs, suggesting that the models are learning to perform the segmentation task.
+
+- Loss Function Impact: The Dice+Focal loss function generally seems to lead to lower validation losses compared to the Dice+CrossEntropy loss for both SegResNet and U-Net architectures. This might indicate that the Dice+Focal loss is more effective for this specific task or dataset, potentially by better handling class imbalance or difficult examples.
+
+- Training Strategy Effectiveness: Patch-based training generally resulted in lower validation losses and also continued decreasing the error, suggesting to run the training for longer epochs.
+
+- Model Performance Comparison: Among the tested configurations, the SegResNet model trained with Dice+Focal loss on image patches appears to achieve the lowest validation loss. 
+
+- Convergence Behavior: The models generally show a stable convergence towards the end of the training period, with validation losses closely tracking training losses, which may indicate a reasonable balance between learning and generalization within the observed epochs.
+
+#### Here is the plots of training and validation losses.
+![Training loss](./figures/training_loss.png)  
+*Figure: Training loss curves.*  
+
+![Validation loss](./figures/validation_loss.png)  
+*Figure: Validation loss curves.*  
+
+*All early stops in the training logs are due to the built-in early-stopping mechanism. All runs that “stopped early” hit the patience limit of 25 non-improving validation checks and then exited.*
 
 Here’s a concise summary of the best validation‐loss achieved by each configuration (minimized over all epochs), sorted from lowest (best) to highest:
 
@@ -38,36 +66,8 @@ Here’s a concise summary of the best validation‐loss achieved by each config
 | U-Net     | Patch         | Dice + Focal         | 0.4079       | 199   |
 | U-Net     | Patch         | Dice + CrossEntropy  | 0.8310       | 121   |
 
-![Validation loss](./figures/validation_loss.png)  
-*Figure: Validation loss curves.*  
 
-*All early stops in the training logs are due to the built-in early-stopping mechanism. All runs that “stopped early” hit the patience limit of 5 non-improving validation checks and then exited.*
-### Key Conclusions
-
-- **SegResNet outperforms U-Net across the board.**  
-  For every loss/data combination, SegResNet achieves substantially lower validation loss than U-Net.
-
-- **Full-image training generally outperforms patch-based training.**  
-  - The best full-image config (SegResNet + Dice + Focal; 0.2902) beats its patch equivalent by ~0.036.  
-  - Patch training tends to overfit: training loss drops more but validation loss plateaus or rises.
-
-- **Dice + Focal loss is most effective on full images.**  
-  - SegResNet: Dice + Focal (0.2902) vs. Dice + CE (0.3108).  
-  - U-Net: Dice + Focal (0.3309) vs. Dice + CE (0.3717).
-
-- **On patches, Dice + CrossEntropy slightly edges out Dice + Focal—but both lag behind full-image runs.**  
-  - SegResNet: CE patch (0.3101) < Focal patch (0.3262).  
-  - U-Net: CE patch (0.8310) shows extreme overfitting vs. Focal patch (0.4079).
-
-- **Convergence speed differences.**  
-  Full-image Dice + Focal (SegResNet) reaches its minimum by 92 epochs, whereas patch runs usually need 140–200 epochs.
-
-### Overall Recommendation
-
-Use **SegResNet** trained on **full images** with **Dice + Focal** loss for the lowest validation loss and best generalization.  
-
-
-## Visual Examples
+### Visual Examples
 
 Want to see how well the models work? Check out the best and worst predictions for each configuration:
 
