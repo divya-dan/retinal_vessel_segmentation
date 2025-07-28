@@ -52,12 +52,26 @@ def train(config_file=None):
         cfg['data']['train_val_split'],
         cfg['data']['random_seed']
     )
-    train_t, val_t, _ = get_transforms()
+    p = cfg['patch']
+    train_t, val_t, _ = get_transforms(
+        image_size=tuple(cfg['data']['image_size']),
+        use_patches=p['use'],
+        patch_size=tuple(p['size']),
+        pos=p['pos'],
+        neg=p['neg'],
+        num_samples=p['num_samples'],
+    )
 
     # Create dataset instance
-    train_ds = SimpleSegmentationDataset(train_pairs, train_t)
+    # train_ds = SimpleSegmentationDataset(train_pairs, train_t)
 
-    val_ds = SimpleSegmentationDataset(val_pairs, val_t)
+    # val_ds = SimpleSegmentationDataset(val_pairs, val_t)
+
+    from monai.data import CacheDataset
+
+    # Use CacheDataset for full images
+    train_ds = CacheDataset(data=train_pairs, transform=train_t, cache_rate=1.0)
+    val_ds = CacheDataset(data=val_pairs, transform=val_t, cache_rate=1.0)
 
     train_loader = DataLoader(train_ds, batch_size=cfg['train']['batch_size'], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=cfg['train']['batch_size'])

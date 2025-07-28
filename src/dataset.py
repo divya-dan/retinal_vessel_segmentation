@@ -28,16 +28,26 @@ def get_dataloaders():
     seed = cfg['data']['random_seed']
     batch_size = cfg['train']['batch_size']
     num_workers = cfg.get('data', {}).get('n_workers', os.cpu_count())
-    image_size = cfg['data'].get('image_size', (512, 512))
-    use_patches = cfg.get('patch', {}).get('use', False)
+    image_size  = tuple(cfg['data']['image_size'])
+    p = cfg['patch']
+    use_patches = p['use']
 
     # Get train/val splits
     train_pairs, val_pairs = split_train_val(train_folder, split_ratio, seed)
     # Get test pairs (no split)
     test_pairs = get_image_mask_pairs(test_folder)
 
-    # Create transforms
-    train_transforms, val_transforms, test_transforms = get_transforms(image_size=image_size, use_patches=use_patches)
+
+
+    # Create transforms with patch settings
+    train_transforms, val_transforms, test_transforms = get_transforms(
+        image_size=image_size,
+        use_patches=use_patches,
+        patch_size=tuple(p['size']),
+        pos=p['pos'],
+        neg=p['neg'],
+        num_samples=p['num_samples'],
+    )
 
     # Build datasets
     DatasetClass = SmartCacheDataset if use_patches else CacheDataset
