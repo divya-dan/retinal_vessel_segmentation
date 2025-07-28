@@ -1,0 +1,9 @@
+“Good morning everyone. Today I want to take you through my journey training medical segmentation models, and how I navigated memory bottlenecks to find the right balance of speed and accuracy.
+
+I began with the classic U-Net, configured with five levels of feature maps—channels of 16, 32, 64, 128, and 256—and two residual units per block. I set it to process full 1024×1024 images, thinking that seeing the whole scan at once would yield the best results. Unfortunately, the GPU memory quickly became my enemy. Storing all those activation maps for backprop meant I could only squeeze in a batch size of 2. Training epochs crawled at a snail’s pace—each pass took nearly twice as long as I’d hoped.
+
+Faced with this slowdown, I switched tactics. I kept the same U-Net parameters but moved to 256×256 patches. Suddenly, my batch size jumped to 4, because each crop’s feature maps are 16× smaller. Training sped up dramatically. I was back on schedule, but I began to wonder if there was an even better architecture that might give me richer representations without blowing my VRAM budget.
+
+That curiosity led me to SegResNet. In my config, I started with 8 initial filters—half of U-Net’s—and doubled at each down-sampling stage. I used a blocks_down pattern of [1, 2, 2, 4] residual units, and [1, 1, 1] blocks on the up-path. I kept the same patch size, so I could still train with a batch size of 2. Despite having fewer channels early on, those extra residual blocks deep down promised stronger feature blending.
+
+So here I am—first a U-Net on full images, battling memory limits; then U-Net on patches for speed; and now SegResNet on patches for depth. Each step taught me how architectural choices—channel width, number of blocks, and input resolution—directly shape both my GPU footprint and training throughput. And that’s the story of how I found my way to a more efficient, effective segmentation pipeline.”

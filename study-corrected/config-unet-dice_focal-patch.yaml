@@ -1,0 +1,77 @@
+data:
+  data_root: data
+  train_val_split: 0.1
+  random_seed: 42
+  image_size:
+  - 1024
+  - 1024
+patch:
+  use: true
+  size:
+  - 256
+  - 256
+  pos: 1
+  neg: 1
+  num_samples: 16
+sliding_window:
+  roi_size:
+  - 256
+  - 256
+  sw_batch_size: 32
+  overlap: 0.5
+model:
+  name: unet
+  segresnet:
+    in_channels: 3
+    out_channels: 1
+    init_filters: 8
+    blocks_down:
+    - 1
+    - 2
+    - 2
+    - 4
+    blocks_up:
+    - 1
+    - 1
+    - 1
+    dropout_prob: 0.0
+    norm: BATCH
+  unet:
+    in_channels: 3
+    out_channels: 1
+    channels:
+    - 16
+    - 32
+    - 64
+    - 128
+    - 256
+    strides:
+    - 2
+    - 2
+    - 2
+    - 2
+    num_res_units: 2
+    norm: BATCH
+train:
+  multi_gpu: false
+  device: cuda
+  seed: 42
+  learning_rate: 0.0001
+  batch_size: 4
+  num_epochs: 250
+  val_interval: 1
+  loss_function: dice_focal
+optimizer:
+  type: Adam
+  weight_decay: 1.0e-05
+scheduler:
+  step_size: 10
+  gamma: 0.5
+early_stopping:
+  metric: val_dice
+  patience: 25
+paths:
+  checkpoint_dir: study-corrected/unet-dice_focal-patch/models
+  log_dir: study-corrected/unet-dice_focal-patch/outputs/logs
+  output_dir: study-corrected/unet-dice_focal-patch/outputs
+threshold: 0.6
